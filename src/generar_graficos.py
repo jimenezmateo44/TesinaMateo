@@ -1,7 +1,6 @@
 import geopandas as gpd
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import os
 
 # Asegurar que la carpeta de salida exista
@@ -12,9 +11,7 @@ os.makedirs("outputs/html", exist_ok=True) # Carpeta para los gráficos interact
 print("Cargando base de datos espacial...")
 gdf = gpd.read_file("data/processed/siniestros_analizados_final.geojson")
 
-# ==========================================
 # EXTRACCIÓN DE CARACTERÍSTICAS (Vehículos)
-# ==========================================
 col_vehiculos = 'VEHICULO_INVOLUCRADO' if 'VEHICULO_INVOLUCRADO' in gdf.columns else 'VEHICULO INVOLUCRADO'
 
 if col_vehiculos in gdf.columns:
@@ -26,13 +23,11 @@ if col_vehiculos in gdf.columns:
     gdf['participa_camion'] = gdf[col_vehiculos].str.contains(r'\bCAMION\b', regex=True, na=False)
     gdf['participa_motocicleta'] = gdf[col_vehiculos].str.contains(r'\bMOTOCICLETA\b', regex=True, na=False)
 
-# Configuración global de estilo profesional
-tema_profesional = "plotly_white"
+
+tema = "plotly_white"
 fuente_corporativa = dict(family="Arial, Helvetica, sans-serif", size=14, color="#2c3e50")
 
-# ==========================================
 # GRÁFICO 1: Análisis Topológico (Distancias)
-# ==========================================
 df_distancias = gdf.dropna(subset=['DIST_INTERSECCION_M']).copy()
 
 fig1 = px.histogram(
@@ -42,15 +37,13 @@ fig1 = px.histogram(
     title='Distribución Espacial: Distancia a la Intersección más Cercana',
     labels={'DIST_INTERSECCION_M': 'Distancia a intersección (metros)'},
     color_discrete_sequence=['#2C3E50'],
-    template=tema_profesional
+    template=tema
 )
 fig1.update_layout(font=fuente_corporativa, yaxis_title="Cantidad de Siniestros Fatales", bargap=0.05)
 fig1.write_image("outputs/diapositiva_1_distancias.png", width=1000, height=600, scale=2)
 fig1.write_html("outputs/html/diapositiva_1_distancias.html")
 
-# ==========================================
 # GRÁFICO 2: Conteo de Tipos de Vehículos Involucrados
-# ==========================================
 conteos_vehiculos = [
     gdf['participa_automovil'].sum(),
     gdf['participa_camioneta'].sum(),
@@ -69,16 +62,15 @@ fig2 = px.bar(
     title='Frecuencia de Vehículos Involucrados en Siniestros Fatales (RN 5)',
     color='Vehículo',
     color_discrete_sequence=['#3498DB', '#E74C3C', '#2C3E50', '#9B59B6'],
-    template=tema_profesional
+    template=tema
 )
 fig2.update_traces(textposition='outside', textfont_size=14)
 fig2.update_layout(font=fuente_corporativa, showlegend=False)
 fig2.write_image("outputs/diapositiva_2_vehiculos.png", width=1000, height=600, scale=2)
 fig2.write_html("outputs/html/diapositiva_2_vehiculos.html")
 
-# ==========================================
-# PREPARACIÓN DE DATOS PARA BOXPLOT Y ANEXOS (Melt)
-# ==========================================
+
+# PREPARACIÓN DE DATOS PARA BOXPLOT
 columnas_v = ['participa_automovil', 'participa_camioneta', 'participa_camion', 'participa_motocicleta']
 df_melted = df_distancias.melt(
     id_vars=['DIST_INTERSECCION_M'], 
@@ -93,9 +85,7 @@ mapeo_nombres = {
 }
 df_plot['Tipo_Vehiculo'] = df_plot['Tipo_Vehiculo'].map(mapeo_nombres)
 
-# ==========================================
 # GRÁFICO 3: Boxplot - Distancia vs Tipo de Vehículo
-# ==========================================
 fig3 = px.box(
     df_plot, 
     x='Tipo_Vehiculo', 
@@ -104,15 +94,14 @@ fig3 = px.box(
     title='Distribución Espacial de Siniestros por Tipo de Vehículo',
     labels={'DIST_INTERSECCION_M': 'Distancia a intersección (metros)', 'Tipo_Vehiculo': 'Tipo de Vehículo'},
     color_discrete_sequence=['#1ABC9C', '#F39C12', '#34495E', '#E74C3C'],
-    template=tema_profesional
+    template=tema
 )
 fig3.update_layout(font=fuente_corporativa, showlegend=False)
 fig3.write_image("outputs/diapositiva_3_boxplot_vehiculos.png", width=1000, height=600, scale=2)
 fig3.write_html("outputs/html/diapositiva_3_boxplot.html")
 
-# ==========================================
+
 # GRÁFICO 4: Donut Chart - Proporción de Puntos Negros (DBSCAN)
-# ==========================================
 if 'cluster' in gdf.columns: 
     aislados = len(gdf[gdf['cluster'] == -1])
     en_cluster = len(gdf[gdf['cluster'] != -1])
@@ -126,33 +115,31 @@ if 'cluster' in gdf.columns:
         df_cluster, 
         values='Cantidad', 
         names='Categoría',
-        hole=0.6, # Esto lo hace un gráfico de anillo (Donut)
+        hole=0.6, 
         title='Agrupamiento Espacial de Siniestros (DBSCAN)',
         color_discrete_sequence=['#E74C3C', '#BDC3C7'],
-        template=tema_profesional
+        template=tema
     )
     fig4.update_traces(textposition='inside', textinfo='percent+label', textfont_size=14)
     fig4.update_layout(font=fuente_corporativa, showlegend=False)
     fig4.write_image("outputs/diapositiva_4_dbscan.png", width=800, height=800, scale=2)
     fig4.write_html("outputs/html/diapositiva_4_dbscan.html")
 
-# ==========================================
-# GRÁFICOS DE ANEXO (CDF, Strip Plot, Violin Plot)
-# ==========================================
 
-# Anexo 1: CDF (Proporción Acumulada)
+
+# CDF (Proporción Acumulada)
 fig_cdf = px.ecdf(
     df_distancias, 
     x='DIST_INTERSECCION_M',
     title='Proporción Acumulada de Siniestros vs. Distancia',
     labels={'DIST_INTERSECCION_M': 'Distancia a intersección (metros)'},
-    template=tema_profesional
+    template=tema
 )
 fig_cdf.update_traces(line_color='#E74C3C', line_width=4)
 fig_cdf.update_layout(font=fuente_corporativa, yaxis_title="Proporción Acumulada (0 a 1)")
 fig_cdf.write_image("outputs/anexo_1_curva_cdf.png", width=1000, height=600, scale=2)
 
-# Anexo 2: Swarm Plot (Strip Plot en Plotly)
+#  Swarm Plot
 fig_strip = px.strip(
     df_plot, 
     x='Tipo_Vehiculo', 
@@ -161,24 +148,24 @@ fig_strip = px.strip(
     title='Distribución Exacta de Siniestros (1 Punto = 1 Vehículo)',
     labels={'DIST_INTERSECCION_M': 'Distancia a intersección (metros)', 'Tipo_Vehiculo': 'Tipo de Vehículo'},
     color_discrete_sequence=['#1ABC9C', '#F39C12', '#34495E', '#E74C3C'],
-    template=tema_profesional,
+    template=tema,
     stripmode='overlay'
 )
 fig_strip.update_traces(marker=dict(size=7, opacity=0.8, line=dict(width=1, color='DarkSlateGrey')))
 fig_strip.update_layout(font=fuente_corporativa, showlegend=False)
 fig_strip.write_image("outputs/anexo_2_swarm_plot.png", width=1000, height=600, scale=2)
 
-# Anexo 3: Violin Plot
+# Violin Plot
 fig_violin = px.violin(
     df_plot, 
     x='Tipo_Vehiculo', 
     y='DIST_INTERSECCION_M',
     color='Tipo_Vehiculo',
-    box=True, # Muestra un pequeño boxplot adentro del violín
+    box=True, 
     title='Densidad Espacial de Riesgo (Violin Plot)',
     labels={'DIST_INTERSECCION_M': 'Distancia a intersección (metros)', 'Tipo_Vehiculo': 'Tipo de Vehículo'},
     color_discrete_sequence=['#1ABC9C', '#F39C12', '#34495E', '#E74C3C'],
-    template=tema_profesional
+    template=tema
 )
 fig_violin.update_layout(font=fuente_corporativa, showlegend=False)
 fig_violin.write_image("outputs/anexo_3_violin_plot.png", width=1000, height=600, scale=2)

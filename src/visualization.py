@@ -1,9 +1,10 @@
 import folium
 from folium.plugins import HeatMap
 import geopandas as gpd
+import pandas as pd
 
 def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
-    """Crea un mapa HTML con capas de calor y puntos con pop-up."""
+    #Crea un mapa HTML con capas de calor y puntos
     centro_lat = gdf['LAT'].mean()
     centro_lon = gdf['LON'].mean()
 
@@ -47,3 +48,53 @@ def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
 
     m.save(output_path)
     print(f"Mapa interactivo guardado exitosamente en: {output_path}")
+
+
+def generar_mapa_topologico(gdf: gpd.GeoDataFrame, ruta_salida: str = "data/processed/mapa_distancias.html"):
+    print("Generando mapa interactivo final...")
+    
+    centro_lat = gdf['LAT'].mean()
+    centro_lon = gdf['LON'].mean()
+    
+    m = folium.Map(location=[centro_lat, centro_lon], zoom_start=8, tiles='OpenStreetMap')
+    
+    for idx, row in gdf.iterrows():
+        coord_accidente = [row['LAT'], row['LON']]
+        
+        folium.Marker(
+            location=coord_accidente,
+            icon=folium.Icon(color='red', icon='info-sign'),
+            tooltip=f"<b>Siniestro:</b> {row.get('TIPO DE ACCIDENTE', 'N/D')}"
+        ).add_to(m)
+        
+        if pd.notna(row['LAT_NODO']) and pd.notna(row['LON_NODO']):
+            coord_nodo = [row['LAT_NODO'], row['LON_NODO']]
+            distancia = round(row['DIST_INTERSECCION_M'], 1)
+            
+            folium.CircleMarker(
+                location=coord_nodo,
+                radius=6,
+                color='#0b5394',
+                fill=True,
+                fill_opacity=1,
+                tooltip="Nodo de acceso/cruce"
+            ).add_to(m)
+            
+            # 2. Etiqueta permanente con la distancia
+            folium.PolyLine(
+                locations=[coord_accidente, coord_nodo],
+                color='#ff9900',
+                weight=3,
+                dash_array='8, 8',
+                tooltip=folium.Tooltip(
+                    f"{distancia} m", 
+                    permanent=True, 
+                    direction="center",
+                    opacity=0.8
+                )
+            ).add_to(m)
+            
+    m.save(ruta_salida)
+    print(f"Mapa interactivo generado y guardado en {ruta_salida}")
+    
+    return m

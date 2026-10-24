@@ -4,7 +4,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 def dms_a_decimal(dms_str: str) -> float:
-    """Convierte un string en formato Grados, Minutos, Segundos a grados decimales."""
+    #Convierte un string en formato Grados, Minutos, Segundos a grados decimales.
     if pd.isna(dms_str):
         return None
     dms_str = str(dms_str).strip()
@@ -30,7 +30,7 @@ def dms_a_decimal(dms_str: str) -> float:
     return decimal
 
 def procesar_tipos_vehiculos(df):
-    """Genera variables booleanas basadas en los vehículos y el entorno."""
+    #Genera variables booleanas basadas en los vehículos y el entorno.
     df['VEHICULO INVOLUCRADO'] = df['VEHICULO INVOLUCRADO'].astype(str).str.upper().str.strip()
     
     # 1. Identificar actores clave
@@ -51,7 +51,7 @@ def procesar_tipos_vehiculos(df):
     return df
 
 def cargar_y_limpiar_siniestros(filepath: str) -> gpd.GeoDataFrame:
-    """Carga el Excel, limpia coordenadas, genera el GeoDataFrame y clasifica vehículos."""
+    #Carga el Excel, limpia coordenadas, genera el GeoDataFrame y clasifica vehículos
     df = pd.read_excel(filepath)
     df.columns = [col.strip().upper() for col in df.columns]
 

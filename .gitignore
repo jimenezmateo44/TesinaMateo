@@ -1,6 +1,7 @@
 .venv/
 data/raw/
 data/processed/
+data/outputs/
 outputs/
 cache/
 **/__pycache__/

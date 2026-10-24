@@ -1,1 +1,12 @@
-    
+folium
+pandas
+geopandas
+matplotlib
+seaborn
+opencv-python
+networkx
+osmnx
+pyrosm
+scikit-learn
+openpyxl
+plotly
