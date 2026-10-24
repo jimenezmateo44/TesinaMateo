@@ -18,10 +18,13 @@ if col_vehiculos in gdf.columns:
     print("Procesando tipos de vehículos...")
     gdf[col_vehiculos] = gdf[col_vehiculos].fillna('').astype(str)
     
-    gdf['participa_automovil'] = gdf[col_vehiculos].str.contains(r'\bAUTOMOVIL\b', regex=True, na=False)
-    gdf['participa_camioneta'] = gdf[col_vehiculos].str.contains(r'\bCAMIONETA\b', regex=True, na=False)
-    gdf['participa_camion'] = gdf[col_vehiculos].str.contains(r'\bCAMION\b', regex=True, na=False)
-    gdf['participa_motocicleta'] = gdf[col_vehiculos].str.contains(r'\bMOTOCICLETA\b', regex=True, na=False)
+    # EXTRACCIÓN DE CARACTERÍSTICAS (Vehículos)
+print("Procesando tipos de vehículos desde variables booleanas...")
+
+gdf['participa_automovil'] = gdf['PARTICIPA_AUTO'].astype(bool)
+gdf['participa_camioneta'] = gdf['PARTICIPA_CAMIONETA'].astype(bool)
+gdf['participa_camion'] = gdf['PARTICIPA_CAMION'].astype(bool)
+gdf['participa_motocicleta'] = gdf['PARTICIPA_MOTO'].astype(bool)
 
 
 tema = "plotly_white"
@@ -50,7 +53,7 @@ conteos_vehiculos = [
     gdf['participa_camion'].sum(),
     gdf['participa_motocicleta'].sum()
 ]
-nombres_eje_vehiculos = ['Automóvil', 'Camioneta', 'Camión', 'Motocicleta']
+nombres_eje_vehiculos = ['Automóvil', 'Camioneta', 'Camion', 'Motocicleta']
 
 df_conteos = pd.DataFrame({'Vehículo': nombres_eje_vehiculos, 'Cantidad': conteos_vehiculos})
 
@@ -170,5 +173,5 @@ fig_violin = px.violin(
 fig_violin.update_layout(font=fuente_corporativa, showlegend=False)
 fig_violin.write_image("outputs/anexo_3_violin_plot.png", width=1000, height=600, scale=2)
 
-print("¡Gráficos de Plotly generados con éxito en la carpeta 'outputs/'!")  
+print("Graficos generados en la carpeta 'outputs/'!")  
 
