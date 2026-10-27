@@ -4,10 +4,10 @@ from pyrosm import OSM
 
 
 def extraer_red_local_pbf(gdf: gpd.GeoDataFrame, pbf_path: str = "data/raw/argentina-260909.osm.pbf") -> nx.MultiDiGraph:
-    """
-    Lee el archivo .pbf local y recorta solo la zona de interés usando los límites de los siniestros.
-    Incluye limpieza exhaustiva para compatibilidad de exportación a Gephi.
-    """
+
+    # Lee el archivo .pbf local y recorta solo la zona de interés usando los límites de los siniestros.
+    # Incluye limpieza exhaustiva para compatibilidad de exportación a Gephi.
+
     print("Calculando el área de influencia")
     min_lon, min_lat, max_lon, max_lat = gdf.total_bounds
     
@@ -47,6 +47,5 @@ def extraer_red_local_pbf(gdf: gpd.GeoDataFrame, pbf_path: str = "data/raw/argen
 
     print("Exportando versión simple para Gephi...")
     
-    # Retornamos el grafo múltiple original para seguir operando en Python
     return G
 

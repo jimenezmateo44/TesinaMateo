@@ -22,7 +22,6 @@ print("\n--- RESUMEN ESTADÍSTICO DE DISTANCIAS TOPOLÓGICAS ---")
 print(stats_dist.to_string(index=False))
 
 # 3. TABLA 2: Estadísticos según Tipo de Vehículo (NORMALIZADO CON BOOLEANOS)
-# Mapeamos las columnas booleanas de tu GeoJSON a los nombres formales para la tesina
 categorias_vehiculos = {
     'PARTICIPA_AUTO': 'Automóvil',
     'PARTICIPA_CAMIONETA': 'Camioneta',

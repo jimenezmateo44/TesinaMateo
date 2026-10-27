@@ -61,6 +61,5 @@ def run_pipeline():
     print("Ejecución finalizada.")
 
     
-
 if __name__ == "__main__":
     run_pipeline()
