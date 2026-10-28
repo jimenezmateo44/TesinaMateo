@@ -4,25 +4,30 @@ import geopandas as gpd
 import pandas as pd
 
 def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
-    #Crea un mapa HTML con capas de calor y puntos
+    print("Generando mapa interactivo final (DBSCAN + Topología)...")
+    
     centro_lat = gdf['LAT'].mean()
     centro_lon = gdf['LON'].mean()
 
+
     m = folium.Map(location=[centro_lat, centro_lon], zoom_start=8, tiles='OpenStreetMap')
 
-    # 1. Capa HeatMap (Densidad / KDE)
+    # 1. CAPA: HeatMap (Densidad / KDE)
     fg_heat = folium.FeatureGroup(name="Superficie de Densidad (KDE)", show=True)
     heat_data = [[row['LAT'], row['LON']] for _, row in gdf.iterrows()]
     HeatMap(heat_data, radius=18, blur=12, max_zoom=10).add_to(fg_heat)
     fg_heat.add_to(m)
 
-    # 2. Capa Puntos Críticos (DBSCAN)
-    fg_clusters = folium.FeatureGroup(name="Puntos Críticos Detectados", show=True)
+    # 2. CAPA: Puntos Críticos (DBSCAN) - TU LÓGICA ORIGINAL
+    fg_clusters = folium.FeatureGroup(name="Puntos Críticos Detectados (DBSCAN)", show=True)
     
+    # 3. CAPA: Topología (Nodos y Distancias) - NUEVA CAPA
+    fg_topologia = folium.FeatureGroup(name="Nodos y Distancias Topológicas", show=False)
+
     for _, row in gdf.iterrows():
         color = 'red' if row.get('ES_PUNTO_NEGRO', False) else 'blue'
         radius = 6 if row.get('ES_PUNTO_NEGRO', False) else 4
-        
+
         info_html = f"""
         <div style="font-family: Arial; font-size: 11px;">
             <b>KM:</b> {row.get('KM', 'S/D')}<br>
@@ -32,69 +37,57 @@ def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
         </div>
         """
         
+        has_nodo = pd.notna(row.get('LAT_NODO')) and pd.notna(row.get('LON_NODO'))
+        distancia = round(row['DIST_INTERSECCION_M'], 1) if has_nodo and 'DIST_INTERSECCION_M' in row else None
+        
+
+        tooltip_accidente = f"<b>Siniestro:</b> {row.get('TIPO DE ACCIDENTE', 'N/D')}"
+        if distancia is not None:
+            tooltip_accidente += f"<br><b>Distancia a nodo:</b> {int(distancia)} m"
+
         folium.CircleMarker(
             location=[row['LAT'], row['LON']],
             radius=radius,
             color=color,
             fill=True,
             fill_opacity=0.7,
-            popup=folium.Popup(info_html, max_width=250)
+            popup=folium.Popup(info_html, max_width=250),
+            tooltip=tooltip_accidente
         ).add_to(fg_clusters)
 
-    fg_clusters.add_to(m)
+    
+        if has_nodo:
+            coord_nodo = [row['LAT_NODO'], row['LON_NODO']]
+            
+            # Nodo azul de intersección
+            folium.CircleMarker(
+                location=coord_nodo,
+                radius=5,
+                color='#0b5394',
+                fill=True,
+                fill_color='#0b5394',
+                fill_opacity=0.9,
+                tooltip=f"Nodo de acceso/cruce ({int(distancia)} m)"
+            ).add_to(fg_topologia)
+            
+            # Etiqueta de texto flotante con la distancia
+            folium.Marker(
+                location=coord_nodo,
+                icon=folium.DivIcon(
+                    icon_size=(150, 36),
+                    icon_anchor=(-10, 10),
+                    html=f'<div style="font-size: 10pt; font-weight: bold; color: #2c3e50; background-color: rgba(255,255,255,0.85); padding: 2px 6px; border-radius: 4px; border: 1px solid #bdc3c7; display: inline-block;">{int(distancia)} m</div>'
+                )
+            ).add_to(fg_topologia)
 
-    # Control de capas interactivo
+    # Añadimos las capas extra al mapa
+    fg_clusters.add_to(m)
+    fg_topologia.add_to(m)
+
+    # Control de capas interactivo (permite tildar/destildar)
     folium.LayerControl(collapsed=False).add_to(m)
 
     m.save(output_path)
-    print(f"Mapa interactivo guardado exitosamente en: {output_path}")
+    print(f"Mapa interactivo unificado guardado exitosamente en: {output_path}")
 
-
-def generar_mapa_topologico(gdf: gpd.GeoDataFrame, ruta_salida: str = "data/processed/mapa_distancias.html"):
-    print("Generando mapa interactivo final...")
-    
-    centro_lat = gdf['LAT'].mean()
-    centro_lon = gdf['LON'].mean()
-    
-    m = folium.Map(location=[centro_lat, centro_lon], zoom_start=8, tiles='OpenStreetMap')
-    
-    for idx, row in gdf.iterrows():
-        coord_accidente = [row['LAT'], row['LON']]
-        
-        folium.Marker(
-            location=coord_accidente,
-            icon=folium.Icon(color='red', icon='info-sign'),
-            tooltip=f"<b>Siniestro:</b> {row.get('TIPO DE ACCIDENTE', 'N/D')}"
-        ).add_to(m)
-        
-        if pd.notna(row['LAT_NODO']) and pd.notna(row['LON_NODO']):
-            coord_nodo = [row['LAT_NODO'], row['LON_NODO']]
-            distancia = round(row['DIST_INTERSECCION_M'], 1)
-            
-            folium.CircleMarker(
-                location=coord_nodo,
-                radius=6,
-                color='#0b5394',
-                fill=True,
-                fill_opacity=1,
-                tooltip="Nodo de acceso/cruce"
-            ).add_to(m)
-            
-            # 2. Etiqueta permanente con la distancia
-            folium.PolyLine(
-                locations=[coord_accidente, coord_nodo],
-                color='#ff9900',
-                weight=3,
-                dash_array='8, 8',
-                tooltip=folium.Tooltip(
-                    f"{distancia} m", 
-                    permanent=True, 
-                    direction="center",
-                    opacity=0.8
-                )
-            ).add_to(m)
-            
-    m.save(ruta_salida)
-    print(f"Mapa interactivo generado y guardado en {ruta_salida}")
-    
     return m

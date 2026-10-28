@@ -5,7 +5,7 @@ import geopandas as gpd
 from src.data_processing import cargar_y_limpiar_siniestros
 from src.infrastructure import calcular_distancia_intersecciones_local, extraer_red_local_pbf
 from src.spatial_analysis import identificar_puntos_negros
-from src.visualization import construir_mapa_interactivo, generar_mapa_topologico
+from src.visualization import construir_mapa_interactivo
 
 def run_pipeline():
     raw_path = os.path.join("data", "raw", "Siniestros_Tesis.xlsx")
@@ -56,7 +56,7 @@ def run_pipeline():
     gdf_final = gpd.read_file(ruta_datos)
     
     # 3. Ejecutás la función pasándole el GeoDataFrame
-    generar_mapa_topologico(gdf_final, ruta_salida="mapa_interactivo_rn5.html")
+    # generar_mapa_topologico(gdf_final, ruta_salida="mapa_interactivo_rn5.html")
     
     print("Ejecución finalizada.")
 
