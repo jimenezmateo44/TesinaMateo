@@ -63,9 +63,9 @@ def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
             folium.CircleMarker(
                 location=coord_nodo,
                 radius=5,
-                color='#0b5394',
+                color="#0b9422",
                 fill=True,
-                fill_color='#0b5394',
+                fill_color="#16940b",
                 fill_opacity=0.9,
             ).add_to(fg_topologia)
             

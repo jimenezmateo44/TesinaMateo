@@ -102,6 +102,7 @@ def calcular_distancia_intersecciones_local(gdf: gpd.GeoDataFrame, G) -> gpd.Geo
     cruces_geom = linea_rn5.intersection(linea_otras)
     
     puntos_cruce = []
+    
     def extraer_puntos(geom):
         if geom is None or geom.is_empty:
             return
