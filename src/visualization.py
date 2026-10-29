@@ -67,18 +67,8 @@ def construir_mapa_interactivo(gdf: gpd.GeoDataFrame, output_path: str):
                 fill=True,
                 fill_color='#0b5394',
                 fill_opacity=0.9,
-                tooltip=f"Nodo de acceso/cruce ({int(distancia)} m)"
             ).add_to(fg_topologia)
             
-            # Etiqueta de texto flotante con la distancia
-            folium.Marker(
-                location=coord_nodo,
-                icon=folium.DivIcon(
-                    icon_size=(150, 36),
-                    icon_anchor=(-10, 10),
-                    html=f'<div style="font-size: 10pt; font-weight: bold; color: #2c3e50; background-color: rgba(255,255,255,0.85); padding: 2px 6px; border-radius: 4px; border: 1px solid #bdc3c7; display: inline-block;">{int(distancia)} m</div>'
-                )
-            ).add_to(fg_topologia)
 
     # Añadimos las capas extra al mapa
     fg_clusters.add_to(m)

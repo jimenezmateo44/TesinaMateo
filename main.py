@@ -55,9 +55,6 @@ def run_pipeline():
     ruta_datos = "data/processed/siniestros_analizados_final.geojson"
     gdf_final = gpd.read_file(ruta_datos)
     
-    # 3. Ejecutás la función pasándole el GeoDataFrame
-    # generar_mapa_topologico(gdf_final, ruta_salida="mapa_interactivo_rn5.html")
-    
     print("Ejecución finalizada.")
 
     

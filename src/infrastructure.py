@@ -10,7 +10,6 @@ import warnings
 def extraer_red_local_pbf(gdf: gpd.GeoDataFrame, pbf_path: str = "data/raw/argentina-260909.osm.pbf") -> nx.MultiDiGraph:
 
     # Lee el archivo .pbf local y recorta solo la zona de interés usando los límites de los siniestros.
-    # Incluye limpieza exhaustiva para compatibilidad de exportación a Gephi.
 
     print("Calculando el área de influencia")
     min_lon, min_lat, max_lon, max_lat = gdf.total_bounds
@@ -22,12 +21,12 @@ def extraer_red_local_pbf(gdf: gpd.GeoDataFrame, pbf_path: str = "data/raw/argen
     osm = OSM(pbf_path, bounding_box=bbox)
 
     print("Extrayendo la red vial (solo calles aptas para vehículos)...")
-    nodes, edges = osm.get_network(network_type="driving", nodes=True)
+    # nodes, edges = osm.get_network(network_type="driving", nodes=True)
+    nodes, edges = osm.get_network(network_type="all", nodes="True")
 
     print("Convirtiendo a formato de grafo para análisis espacial...")
     G = osm.to_graph(nodes, edges, graph_type="networkx")
     
-    print("Limpiando geometrías, listas y forzando lat/lon para Gephi...")
     # Limpieza de Nodos
     for nodo, datos in list(G.nodes(data=True)):
         if 'y' in datos and 'x' in datos:
@@ -57,10 +56,7 @@ def extraer_red_local_pbf(gdf: gpd.GeoDataFrame, pbf_path: str = "data/raw/argen
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 def unir_geometrias(geoms):
-    """
-    Función auxiliar universal: unifica geometrías sin importar 
-    si tenés Shapely 1.x o Shapely 2.x instalado.
-    """
+
     if geoms is None or (hasattr(geoms, 'empty') and geoms.empty):
         return None
     try:
@@ -73,10 +69,6 @@ def unir_geometrias(geoms):
         return unary_union(geoms)
 
 def calcular_distancia_intersecciones_local(gdf: gpd.GeoDataFrame, G) -> gpd.GeoDataFrame:
-    """
-    Calcula la distancia a la intersección más cercana utilizando un cruce 
-    GEOMÉTRICO puro totalmente compatible con cualquier versión de Shapely.
-    """
     # Proyectamos a metros (EPSG:5347 POSGAR 2007 para Argentina)
     gdf_proj = gdf.to_crs(epsg=5347) 
     
